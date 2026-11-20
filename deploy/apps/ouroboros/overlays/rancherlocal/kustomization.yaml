@@ -1,0 +1,47 @@
+# rancherlocal overlay for the Ouroboros blueprint: hostname, allow-list, the JWKS the ingestion
+# API trusts, and the images from the environment's registry crdemorancherlocal.azurecr.io
+# (cloud-platform-infra-example live/dev/rancherlocal/local-cluster). Argo CD on rancherlocal syncs this path.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ouroboros
+
+resources:
+  - ../../base
+  - ../../routes
+
+labels:
+  - includeSelectors: false
+    pairs:
+      environment: rancherlocal
+
+images:
+  # Deploying a build = bumping these to the sha-<short> the ci run published.
+  - name: example.azurecr.io/ouroboros/api
+    newName: crdemorancherlocal.azurecr.io/ouroboros/api
+    newTag: sha-0000000
+  - name: example.azurecr.io/ouroboros/reporting
+    newName: crdemorancherlocal.azurecr.io/ouroboros/reporting
+    newTag: sha-0000000
+
+patches:
+  - path: hostname-patch.yaml
+    target:
+      kind: HTTPRoute
+      name: ouroboros-api
+  - path: hostname-patch.yaml
+    target:
+      kind: HTTPRoute
+      name: ouroboros
+  - path: hostname-patch.yaml
+    target:
+      kind: HTTPRoute
+      name: ouroboros-webhook
+  - path: allowlist-patch.yaml
+    target:
+      kind: SecurityPolicy
+      name: ouroboros-allowlist
+  - path: jwks-patch.yaml
+  - path: reporting-env-patch.yaml
+    target:
+      kind: Deployment
+      name: ouroboros-reporting

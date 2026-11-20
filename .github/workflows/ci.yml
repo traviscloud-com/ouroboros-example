@@ -1,0 +1,124 @@
+# Test, then build the two container images. Pushes to main publish
+# <registry>/ouroboros/api and <registry>/ouroboros/reporting as
+# :sha-<short> (and :main) to the platform's Azure Container Registry; pull
+# requests only build. Deployment is a tag bump in deploy/apps/ouroboros.
+#
+# Registry auth is GitHub OIDC, no secret: the job's id-token is exchanged
+# for a managed identity that holds AcrPush on that one registry
+# (traviscloud-com/cloud-platform-infra-example). The three AZURE_*
+# variables and ACR_LOGIN_SERVER are repository variables set from that
+# repo's `terragrunt output`. Without ACR_LOGIN_SERVER the images are built
+# but not pushed, so the workflow passes on a fresh fork.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write # OIDC token for azure/login
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: ouroboros_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test -d ouroboros_test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://test:test@127.0.0.1:5432/ouroboros_test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            api/pyproject.toml
+            reporting/pyproject.toml
+            client/pyproject.toml
+      - name: Install
+        run: |
+          pip install -e './api[dev]' -e './reporting[dev,parquet]' -e './client[dev]'
+      - run: python -m pytest -q
+        working-directory: api
+      - run: python -m pytest -q
+        working-directory: reporting
+      - run: python -m pytest -q
+        working-directory: client
+
+  dashboard:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - run: npm ci --no-fund --no-audit
+      # tsc --noEmit, vite build and the bundle budget (scripts/check-bundle.mjs,
+      # fails above 400 KB gzipped for the initial chunk; task 4.14)
+      - run: npm run build
+
+  image:
+    needs: [test, dashboard]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            context: api
+            dockerfile: api/Dockerfile
+          - name: reporting
+            context: .
+            dockerfile: reporting/Dockerfile
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Azure login (OIDC)
+        if: github.event_name == 'push' && vars.ACR_LOGIN_SERVER != ''
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # Exchanges the Entra token for a registry token and writes it to the
+      # Docker config; nothing long-lived is stored.
+      - name: Registry login
+        if: github.event_name == 'push' && vars.ACR_LOGIN_SERVER != ''
+        run: az acr login --name "${ACR_LOGIN_SERVER%%.*}"
+        env:
+          ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ vars.ACR_LOGIN_SERVER || 'example.azurecr.io' }}/ouroboros/${{ matrix.name }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=main,enable={{is_default_branch}}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name == 'push' && vars.ACR_LOGIN_SERVER != '' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

@@ -1,0 +1,42 @@
+Tremor Raw components vendored into Ouroboros
+=============================================
+
+The files in this directory are derived from Tremor Raw
+(https://github.com/tremorlabs/tremor), Copyright (c) Tremor Labs, Inc.,
+licensed under the Apache License, Version 2.0 (see LICENSE in this directory).
+
+Vendored files and their upstream sources (repository head
+ca4d588f47820ff3d514d37fa4ee08a4222dec11; BarList checked 2026-11-08, the
+rest 2026-11-10):
+
+  BarList.tsx         <- src/components/BarList/BarList.tsx
+                         upstream commit e3e8e695661fd61904daa247dd12d91459935611
+  Tracker.tsx         <- src/components/Tracker/Tracker.tsx
+                         upstream commit e3e8e695661fd61904daa247dd12d91459935611
+  CategoryBar.tsx     <- src/components/CategoryBar/CategoryBar.tsx
+                         upstream commit 53c79e5dc27118e6294c0fb459e041b074fd44d6
+  ProgressBar.tsx     <- src/components/ProgressBar/ProgressBar.tsx
+                         upstream commit 53c79e5dc27118e6294c0fb459e041b074fd44d6
+  ProgressCircle.tsx  <- src/components/ProgressCircle/ProgressCircle.tsx
+                         upstream commit 53c79e5dc27118e6294c0fb459e041b074fd44d6
+
+Not vendored (rebuilt as shadcn/ui chart configs, design D3): DonutChart,
+SparkChart and every other Recharts-based Tremor component.
+
+Modifications (Ouroboros), all files:
+  - React 19: `ref` is an ordinary prop; React.forwardRef removed.
+  - `cx`/`focusRing` from Tremor's utils replaced by `cn` and shadcn/ui focus
+    ring classes; hard-coded gray/blue/emerald/yellow/red Tailwind classes
+    replaced by shadcn theme tokens and the reserved dataviz status tokens
+    (`--chart-1..5`, `--status-good/warn/crit`, `--muted-foreground`), so the
+    components follow the `.dark` class strategy.
+  - `tremor-id` attribute dropped.
+Per file:
+  - Tracker: Radix `@radix-ui/react-hover-card` replaced by the shadcn/ui
+    Tooltip (Base UI); block `color` is a CSS colour value, not a class.
+  - CategoryBar: Tremor's `chartColors` class map removed; `colors` are CSS
+    colour values applied as inline `background`; Tremor's Tooltip replaced by
+    the shadcn/ui Tooltip; optional `labelFormatter` added.
+  - ProgressBar / ProgressCircle: `tailwind-variants` removed; the `variant`
+    prop maps to a token table (`PROGRESS_COLORS`) and the track is the same
+    colour through `color-mix()` at 25 % alpha.

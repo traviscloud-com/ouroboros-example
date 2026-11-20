@@ -1,0 +1,74 @@
+{
+  "session_id": "00000003-0000-4000-8000-000000000003",
+  "transcript_path": "/home/user/.claude/projects/-home-user-project/00000003-0000-4000-8000-000000000003.jsonl",
+  "cwd": "/home/user/project",
+  "prompt_id": "00000004-0000-4000-8000-000000000004",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Agent",
+  "tool_input": {
+    "description": "xxxxxxxxxx",
+    "prompt": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "subagent_type": "general-purpose",
+    "run_in_background": false
+  },
+  "tool_response": {
+    "status": "completed",
+    "prompt": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "agentId": "a0000000000000001",
+    "agentType": "general-purpose",
+    "harnessNoteCount": 0,
+    "harnessTailCount": 0,
+    "harnessSectionHash": "0000000000000000",
+    "content": [
+      {
+        "type": "text",
+        "text": "xxxx"
+      }
+    ],
+    "resolvedModel": "claude-sonnet-5-5",
+    "totalDurationMs": 1295,
+    "totalTokens": 14578,
+    "totalToolUseCount": 0,
+    "usage": {
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 14573,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 3,
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 14573
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 3,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 14573,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 14573,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "canContinueAgent": true
+  },
+  "tool_use_id": "toolu_000000000000000000000003",
+  "duration_ms": 1298
+}

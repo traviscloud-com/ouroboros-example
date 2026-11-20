@@ -1,0 +1,121 @@
+# One hostname, two routes (hostnames patched per environment). The longer path match wins, so
+# /v1/telemetry/* and /v1/otel/* reach the ingestion API and everything else the dashboard.
+# /v1/otel is the OTLP/HTTP receiver Claude Code's built-in telemetry export posts to
+# (it appends /v1/metrics and /v1/logs itself); it carries the same bearer token as /v1/telemetry.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ouroboros-api
+  namespace: ouroboros
+spec:
+  parentRefs:
+    - name: platform
+      namespace: gateway
+      sectionName: https
+  hostnames:
+    - ouroboros.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/telemetry
+        - path:
+            type: PathPrefix
+            value: /v1/otel
+      backendRefs:
+        - name: ouroboros-api
+          port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ouroboros
+  namespace: ouroboros
+spec:
+  parentRefs:
+    - name: platform
+      namespace: gateway
+      sectionName: https
+  hostnames:
+    - ouroboros.example.com
+  rules:
+    - backendRefs:
+        - name: ouroboros-reporting
+          port: 80
+---
+# GitHub calls the proposals webhook directly (no browser, no Google login); the reporting service
+# verifies the HMAC signature itself, so this one path gets its own route under an allow policy.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ouroboros-webhook
+  namespace: ouroboros
+spec:
+  parentRefs:
+    - name: platform
+      namespace: gateway
+      sectionName: https
+  hostnames:
+    - ouroboros.example.com
+  rules:
+    - matches:
+        - path:
+            type: Exact
+            value: /v1/proposals/github-webhook
+      backendRefs:
+        - name: ouroboros-reporting
+          port: 80
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: ouroboros-webhook-own-auth
+  namespace: ouroboros
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: ouroboros-webhook
+  authorization:
+    defaultAction: Allow
+---
+# The ingestion API is called by the client SDK with a bearer token it validates itself, not by a
+# browser, so a Google login cannot sit in front of it: this route-level policy replaces the
+# Gateway-wide one for the API route.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: ouroboros-api-own-auth
+  namespace: ouroboros
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: ouroboros-api
+  authorization:
+    defaultAction: Allow
+---
+# The dashboard: Gateway login plus an account allow-list, layered on the Gateway-wide policy
+# (mergeType), so oauth2-proxy authenticates and only the listed accounts (patched per
+# environment) get past the 403.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: ouroboros-allowlist
+  namespace: ouroboros
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: ouroboros
+  mergeType: StrategicMerge
+  authorization:
+    defaultAction: Deny
+    rules:
+      - name: allowed-accounts
+        action: Allow
+        principal:
+          headers:
+            - name: x-auth-request-email
+              values:
+                - admin@example.com   # patched per environment

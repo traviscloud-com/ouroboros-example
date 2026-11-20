@@ -1,0 +1,18 @@
+# Gateway API routes and the route-attached Envoy Gateway SecurityPolicies for Ouroboros. One
+# hostname on the platform Gateway: /v1/telemetry and /v1/otel go to the ingestion API (which
+# validates bearer JWTs itself, so it opts out of the Gateway login); /v1/proposals/github-webhook
+# is allowed through (HMAC-verified by the service); every other path is the dashboard behind the
+# Gateway login plus an account allow-list. Hostnames and the allow-list are patched per
+# environment in ../overlays/<env>. Labels match ../base so the render is unchanged.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ouroboros
+
+resources:
+  - access.yaml
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/name: ouroboros
+      app.kubernetes.io/part-of: cloud-platform

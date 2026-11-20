@@ -1,0 +1,33 @@
+# Blueprint: Ouroboros, Claude skill telemetry. Two services from this repo: the ingestion API
+# (api.yaml) and the reporting API + dashboard SPA (reporting.yaml), both one replica, sharing a
+# CloudNativePG PostgreSQL cluster in the namespace (postgres-cluster.yaml; needs the
+# cloudnative-pg app). The Gateway routes and their policies live in ../routes. Hostname,
+# allow-list, JWKS, registry and image tags are patched per environment in ../overlays/<env>.
+# Images live in the environment's Azure Container Registry, pushed by this repo's ci workflow
+# through GitHub OIDC, pulled with the token in externalsecret-acr.yaml.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ouroboros
+
+resources:
+  - namespace.yaml
+  - externalsecret-acr.yaml
+  - postgres-cluster.yaml
+  - jwks.yaml
+  - api.yaml
+  - reporting.yaml
+  - networkpolicy.yaml
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/name: ouroboros
+      app.kubernetes.io/part-of: cloud-platform
+
+images:
+  # Placeholder registry; each environment overlay sets newName to its own ACR and newTag to the
+  # build it runs (the ci workflow publishes sha-<short> and main on every push to main).
+  - name: example.azurecr.io/ouroboros/api
+    newTag: sha-0000000
+  - name: example.azurecr.io/ouroboros/reporting
+    newTag: sha-0000000

@@ -1,0 +1,43 @@
+schema: spec-driven
+
+# Project context: shown to AI when creating artifacts.
+context: |
+  Ouroboros is a Claude Code telemetry and improvement platform. Standing goal:
+  collect Claude usage data, prompts and context so an autonomous feedback loop
+  can incrementally improve our agents, skills, context (CLAUDE.md/rules) and
+  hooks while minimizing context bloat.
+
+  Shape: two images, ouroboros/api (FastAPI ingestion, bearer-JWT auth, dev-mode
+  RS256 today, Entra later) and ouroboros/reporting (FastAPI read side that also
+  serves the Vite + React SPA from STATIC_DIR), on CloudNativePG Postgres 17
+  (ouroboros-db). Deployed to the rancherlocal k3s cluster by Argo CD from
+  `deploy/apps/ouroboros/overlays/rancherlocal` in this repo (plain Kustomize:
+  base + routes + overlay). One hostname,
+  https://ouroboros.rancherlocal.azure.example.com: /v1/telemetry/* and
+  /v1/otel/* reach the API with their own bearer auth, and
+  /v1/proposals/github-webhook reaches reporting with its own HMAC check;
+  everything else goes through Envoy Gateway + oauth2-proxy Google login, which
+  forwards X-Auth-Request-Email. Cheapest footprint, single user today, team-shaped.
+  Keep the two-service shape unless there is a strong reason. No secrets in Git.
+
+  Client: plugin ouroboros@ouroboros (hooks) + stdlib-only hook path, SDK
+  ouroboros-client (httpx only) installed in system python3 site-packages,
+  env-driven config (OUROBOROS_API_URL, OUROBOROS_DEV_KEY_DIR, OUROBOROS_UPN/OID,
+  session from CLAUDE_CODE_SESSION_ID), python3 -m ouroboros_client.report CLI.
+
+  Privacy posture: prompts, corrections and any captured
+  text are sensitive; telemetry is disclosed, never covert; OUROBOROS_TELEMETRY=off
+  disables everything client-side; content-bearing collection is off by default
+  and opt-in; retention is per sensitivity class.
+
+  Conventions: Python 3.11+, FastAPI, SQLAlchemy Core with raw SQL, pytest;
+  TypeScript, Vite 7, React 19, Tailwind v4, shadcn/ui on Base UI primitives
+  (not Radix), Recharts 3.x, react-router-dom 7; SQL-first schema applied by the
+  API on start. OpenSpec changes follow the archived ones under
+  openspec/changes/archive/ (proposal/design/tasks + spec deltas with
+  SHALL requirements and WHEN/THEN scenarios).
+
+# Per-artifact rules (optional)
+# rules:
+#   proposal:
+#     - Keep proposals under 500 words

@@ -1,0 +1,16 @@
+{
+  "name": "ouroboros",
+  "owner": {
+    "name": "Travis",
+    "url": "https://github.com/traviscloud-com"
+  },
+  "description": "Ouroboros skill telemetry tooling for Claude Code",
+  "plugins": [
+    {
+      "name": "ouroboros",
+      "source": "./plugin",
+      "description": "Telemetry capture hooks and the feedback-protocol skill for the Ouroboros loop",
+      "version": "0.2.0"
+    }
+  ]
+}

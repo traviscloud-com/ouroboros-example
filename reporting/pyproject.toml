@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ouroboros-reporting"
+version = "0.5.0"
+description = "Ouroboros telemetry reporting API + dashboard host"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.7",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.1",
+    "uvicorn[standard]>=0.30",
+    "vaderSentiment>=3.3",
+    # Improvement loop (design D14): Claude API analyst, GitHub REST + App JWTs.
+    "anthropic>=2.7",
+    "httpx>=0.27",
+    "pyjwt[crypto]>=2.8",
+]
+
+[project.optional-dependencies]
+# Parquet export (GET /v1/export/{dataset}?format=parquet); NDJSON needs nothing extra.
+parquet = [
+    "pyarrow>=17.0",
+]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

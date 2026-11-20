@@ -1,0 +1,21 @@
+
+# Dev signing keys — never commit
+.dev-keys/
+
+# Python
+api/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+reporting/.venv/
+client/.venv/
+dashboard/node_modules/
+dashboard/dist/
+
+# Local virtualenvs
+.venv/
+
+# Playwright smoke output (dashboard/e2e)
+dashboard/test-results/
+dashboard/playwright-report/

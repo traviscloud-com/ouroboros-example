@@ -1,0 +1,9 @@
+# Public half of the rancherlocal signing keypair (api/scripts/gen_jwks.py); the
+# private key is on the operator's machine only and mints the tokens the SDK sends.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ouroboros-jwks
+  namespace: ouroboros
+data:
+  jwks.json: '{"keys": []}'   # replace with the output of api/scripts/gen_jwks.py

@@ -1,0 +1,12 @@
+{
+  "name": "ouroboros",
+  "description": "Claude Code usage telemetry for your Ouroboros instance. Hooks on every session event spool metadata locally and upload it in batches: session start/end (model, source, permission mode, effort), prompts (text ON by default via OUROBOROS_CAPTURE_PROMPTS, otherwise length only), slash-command expansions, tool calls (name, duration, success, sizes, error class; tool input/output text only with OUROBOROS_CAPTURE_TOOL_CONTENT=on, default off), subagent start/stop, compaction (trigger and sizes; summary text follows the prompts toggle), instruction files loaded (path relative to cwd + SHA-256, never contents), model switches, and skill outcomes reported by the telemetry-reporting skill. Optionally, `python3 -m ouroboros_client.setup_otel` enables Claude Code's built-in OpenTelemetry export of token and cost metrics with OTEL_LOG_USER_PROMPTS/ASSISTANT_RESPONSES/TOOL_CONTENT/RAW_API_BODIES=0 and OTEL_LOG_TOOL_DETAILS=1 (names, not content). Everything is stamped with your verified identity server-side; text classes are sensitive with shorter retention. Opt out of all of it with OUROBOROS_TELEMETRY=off.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Travis",
+    "url": "https://github.com/traviscloud-com"
+  },
+  "homepage": "https://github.com/traviscloud-com/ouroboros-example",
+  "repository": "https://github.com/traviscloud-com/ouroboros-example",
+  "license": "MIT"
+}

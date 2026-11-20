@@ -1,0 +1,6 @@
+# Keep host build artefacts out of the image build context (reporting/Dockerfile runs npm ci itself).
+dashboard/node_modules
+dashboard/dist
+**/.venv
+**/__pycache__
+.git

@@ -1,0 +1,11 @@
+{
+  "session_id": "00000003-0000-4000-8000-000000000003",
+  "transcript_path": "/home/user/.claude/projects/-home-user-project/00000003-0000-4000-8000-000000000003.jsonl",
+  "cwd": "/home/user/project",
+  "hook_event_name": "SessionStart",
+  "source": "resume",
+  "seconds_since_last_response": 79,
+  "context_tokens": 21277,
+  "prompt_cache_likely_expired": false,
+  "estimated_cache_write_usd": 0.0532
+}
